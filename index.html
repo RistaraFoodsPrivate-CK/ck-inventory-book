@@ -1,4 +1,4 @@
-
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -128,6 +128,38 @@ h1{margin:0 0 5px;font-size:25px}.sub{color:#64748b;margin-bottom:20px}.filters{
   z-index: 1;
 }
 </style>
+
+<style id="global-font-minus-2px">
+/* CK Inventory Book - Global UI font reduction: approximately 2px */
+body { font-size: 14px; }
+body, button, input, select, textarea { font-size: calc(1em - 2px); }
+.top-heading h1 { font-size: 23px; }
+.top-heading .top-sub { font-size: 11px; }
+.user { font-size: 11px; }
+.menu button { font-size: 12px; }
+.panel-title { font-size: 14px; }
+.sub { font-size: 12px; }
+.field { font-size: 10px; }
+.field input, .field select { font-size: 12px; }
+.btn { font-size: 12px; }
+.quick button { font-size: 10px; }
+.kpi-title { font-size: 10px; }
+.kpi-value { font-size: 21px; }
+.table { font-size: 11px; }
+.table th, .table td { font-size: 11px; }
+.badge { font-size: 9px; }
+.loginbox h2 { font-size: 22px; }
+.loginbox { font-size: 12px; }
+.loginbox input, .loginbox select { font-size: 12px; }
+.error { font-size: 10px; }
+.chart-legend { font-size: 10px; }
+.mini-table { font-size: 9px; }
+.top-variance-title { font-size: 10px; }
+.top-variance-table { font-size: 8.5px; }
+.top-variance-table th { font-size: 7.5px; }
+#reports .table { font-size: 9px; }
+#reports .table th { font-size: 8px; }
+</style>
 </head>
 <body>
 
@@ -226,7 +258,7 @@ h1{margin:0 0 5px;font-size:25px}.sub{color:#64748b;margin-bottom:20px}.filters{
 
 <div class="card" id="countedStockIOCard" style="margin-top:14px">
   <div class="panel-title">Counted Stock Import / Export</div>
-  <p class="muted">Upload counted stock in this format: Item Name, UOM, Category, Counted QTY. SKU and Sub Category are taken automatically from the Admin Rate Update master.</p>
+  <p class="muted">Upload counted stock in this format: Item Name, UOM, Category, Counted QTY. SKU, Category and Sub Category are taken automatically from the Active Item Master. UOM is retained from the upload.</p>
   <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:12px 0;">
     <button type="button" class="btn" onclick="downloadCountedStockTemplate()">⬇ Download Template</button>
     <label class="btn" style="cursor:pointer;">⬆ Import Counted Stock<input id="countedStockFile" type="file" accept=".csv,text/csv" style="display:none" onchange="importCountedStockFile(this)"></label>
@@ -320,7 +352,7 @@ h1{margin:0 0 5px;font-size:25px}.sub{color:#64748b;margin-bottom:20px}.filters{
 </div>
 <div class="card" style="margin-top:14px">
 <div class="panel-title">Current System Stock Import</div>
-<div class="sub">Admin only. Import your current system stock CSV using the exact columns: item_name, category_name, quantity_available, unit. SKU and Sub Category are taken automatically from the Admin Rate Update master.</div>
+<div class="sub">Admin only. Import your current system stock CSV using the exact columns: item_name, category_name, quantity_available, unit. SKU, Category and Sub Category are taken automatically from the Active Item Master. UOM is retained from the upload.</div>
 <div class="filters">
 <div class="field"><label>Closing Date</label><input type="date" id="systemStockDate"></div>
 <button class="btn light" onclick="downloadSystemStockTemplate()">⬇ Download System Stock Template</button>
@@ -329,6 +361,14 @@ h1{margin:0 0 5px;font-size:25px}.sub{color:#64748b;margin-bottom:20px}.filters{
 </div>
 <div id="systemStockStatus" style="margin-top:10px"></div>
 <div class="tablewrap" style="margin-top:14px"><table class="table" id="systemStockTable"></table></div>
+</div>
+
+<div class="card" style="margin-top:14px;border-left:4px solid #ef4444">
+<div class="panel-title">Inventory Closing Data Management</div>
+<div class="sub">Clear Inventory Closing entries and imported Counted Stock when starting a fresh physical-count cycle. System Stock, Rates, Active Item Master, Users and Closing Schedule are not deleted.</div>
+<div style="margin-top:12px">
+<button class="btn danger" type="button" onclick="clearInventoryClosingData()">🗑 Clear All Inventory Closing + Counted Stock</button>
+</div>
 </div>
 
 <div class="card" style="margin-top:14px" id="userAccessCard">
@@ -366,6 +406,17 @@ h1{margin:0 0 5px;font-size:25px}.sub{color:#64748b;margin-bottom:20px}.filters{
     <button class="btn primary" type="button" onclick="searchClosingDocument()">Search Document</button>
   </div>
   <div id="adminDocResult" style="margin-top:12px"></div>
+</div>
+<div class="card" style="margin-top:14px" id="closingDateDeleteCard">
+  <div class="panel-title">Delete Inventory Closing by Date</div>
+  <div class="sub">Admin only. Select a closing date to remove all Inventory Closing entries posted on that exact date, whether they were entered manually or uploaded. Rates, System Stock, Active Item Master and Closing Schedule will not be deleted.</div>
+  <div class="filters" style="margin-top:12px;align-items:end">
+    <div class="field"><label>Closing Date to Delete</label><input type="date" id="adminDeleteClosingDate" onchange="previewClosingDateDelete()"></div>
+    <div class="field"><label>Entries Found</label><input id="adminDeleteClosingCount" value="0" readonly></div>
+    <button class="btn light" type="button" onclick="previewClosingDateDelete()">Check Date</button>
+    <button class="btn danger" type="button" onclick="deleteClosingDateData()">Delete All Entries for This Date</button>
+  </div>
+  <div id="adminDeleteClosingResult" style="margin-top:12px"></div>
 </div>
 <div class="card" style="margin-top:14px" id="closingScheduleCard">
   <div class="panel-title">Closing Date Schedule</div>
@@ -411,6 +462,7 @@ function normalizeRemoteData(d){
   d.closings=remoteArray(d.closings); d.rates=remoteArray(d.rates); d.audit=remoteArray(d.audit);
   d.systemStock=remoteArray(d.systemStock); d.countedStock=remoteArray(d.countedStock); d.users=remoteArray(d.users);
   d.closingSchedule=remoteArray(d.closingSchedule); d.activeItems=remoteArray(d.activeItems);
+  d.maintenance=d.maintenance||{};
   return d;
 }
 function remoteSafeData(){
@@ -426,6 +478,19 @@ async function loadRemoteData(){
   const snap=await firebaseDb.ref('appData').once('value');
   if(snap.exists()){ data=normalizeRemoteData(snap.val()); }
   else { data=normalizeRemoteData(data); await firebaseDb.ref('appData').set(remoteSafeData()); }
+
+  // ONE-TIME CLEAN START for the current Inventory Closing reset.
+  // Deletes all Inventory Closing entries and imported Counted Stock from Firebase.
+  // System Stock, Rates, Active Item Master, Users and Closing Schedule are preserved.
+  if(data.maintenance.inventoryClosingResetV2!==true){
+    data.closings=[];
+    data.countedStock=[];
+    data.maintenance.inventoryClosingResetV2=true;
+    data.audit=remoteArray(data.audit);
+    data.audit.push({time:new Date().toLocaleString(),by:'system',action:'Inventory Closing and Counted Stock reset for clean start'});
+    localStorage.setItem(KEY,JSON.stringify(data));
+    await firebaseDb.ref('appData').set(remoteSafeData());
+  }
   firebaseDataLoaded=true;
 }
 function getSecondaryAuth(){
@@ -610,16 +675,11 @@ function masterForItem(item){
 }
 function latestRateMaster(){
  const map={};
+ // Active Item Master is the permanent source for SKU, Item Name, Category and Sub Category.
  remoteArray(data.activeItems).forEach(m=>{
    const sku=String(m.sku||'').trim(); if(!sku)return;
    const r=latestRateRecordForSku(sku);
    map[sku.toLowerCase()]={sku,item:m.item||'',category:m.category||'',subcat:m.subcat||'',unit:r?.unit||'',rate:Number(r?.rate||0),date:r?.date||'',timestamp:r?.timestamp||r?.timeStamp||''};
- });
- // Keep legacy rate-only items visible until they are added to Active Item Master.
- remoteArray(data.rates).forEach(r=>{
-   const sku=String(r.sku||'').trim(); if(!sku)return;
-   const key=sku.toLowerCase();
-   if(!map[key]){ const latest=latestRateRecordForSku(sku); map[key]={sku:latest.sku,item:latest.item||'',category:latest.category||'',subcat:latest.subcat||'',unit:latest.unit||'',rate:Number(latest.rate||0),date:latest.date||'',timestamp:latest.timestamp||latest.timeStamp||''}; }
  });
  return Object.values(map);
 }
@@ -808,8 +868,25 @@ function refreshSubCategoryFilter(){
  el.innerHTML='<option value="">All Sub Categories</option>'+list.map(v=>'<option value="'+esc(v)+'">'+esc(v)+'</option>').join('');
  if(list.includes(current))el.value=current;
 }
-function rows(){return (Array.isArray(data.closings)?data.closings:[]).map(x=>{const master=masterForSku(x.sku)||{};const stock=stockForDate(x.sku,x.date);const system=stock?Number(stock.quantity_available):Number(x.system||0);let rate=Number.isFinite(Number(x.rate))&&Number(x.rate)>0?Number(x.rate):applicableRate(x.sku,x.date,0),v=Number.isFinite(Number(x.importedVariance))?Number(x.importedVariance):(Number(x.physical||0)-system);return {...x,item:master.item||x.item||'',uom:master.unit||x.uom||'',cat:master.category||x.cat||'',subcat:master.subcat||x.subcat||x.subCategory||'',system,rate,qty:v,varQty:v,value:v*rate,type:v<0?'SHORT':v>0?'EXCESS':'MATCHED'}})}
+function effectiveSystemQtyForClosing(x){
+ const snap=stockForDate(x?.sku,x?.date);
+ if(snap && snap.quantity_available!==undefined && snap.quantity_available!=='') return Number(snap.quantity_available);
+ return Number(x?.system||0);
+}
+function rows(){
+ return (Array.isArray(data.closings)?data.closings:[]).map(x=>{
+  const master=masterForSku(x.sku)||{};
+  const rate=Number.isFinite(Number(x.rate))&&Number(x.rate)>0?Number(x.rate):applicableRate(x.sku,x.date,0);
+  // Counted QTY is the actual physical quantity counted. Older imported records
+  // stored it in importedVariance; normalize that into Physical Qty.
+  const system=effectiveSystemQtyForClosing(x);
+  const physical=Number.isFinite(Number(x.importedVariance))?Number(x.importedVariance):Number(x.physical||0);
+  const v=physical-system;
+  return {...x,system,physical,item:master.item||x.item||'',uom:master.unit||x.uom||'',cat:master.category||x.cat||'',subcat:master.subcat||x.subcat||x.subCategory||'',rate,qty:v,varQty:v,value:v*rate,type:v<0?'SHORT':v>0?'EXCESS':'MATCHED'};
+ });
+}
 function renderAll(){
+ if(normalizeLegacyCountedClosingRecords()) save();
  ensureClosingDocumentNumbers();
  normalizeScheduleTypes();
  refreshClosingItemDropdown();
@@ -903,7 +980,7 @@ function renderDash(){
  const qtyFmt=n=>Number(n||0).toLocaleString('en-IN',{maximumFractionDigits:2});
  const shortTop=[...r].filter(x=>x.type==='SHORT').sort((a,b)=>Math.abs(Number(b.qty||0))-Math.abs(Number(a.qty||0)) || Math.abs(b.value)-Math.abs(a.value)).slice(0,15);
  const excessTop=[...r].filter(x=>x.type==='EXCESS').sort((a,b)=>Math.abs(Number(b.qty||0))-Math.abs(Number(a.qty||0)) || Math.abs(b.value)-Math.abs(a.value)).slice(0,15);
- const topHead='<tr><th>Item Name</th><th>System Qty</th><th>Manual Qty</th><th>Variance Cost</th></tr>';
+ const topHead='<tr><th>Item Name</th><th>System Qty</th><th>Diff. Qty</th><th>Variance Cost</th></tr>';
  const topRow=x=>`<tr><td title="${esc(x.item)}">${esc(x.item)}</td><td>${qtyFmt(x.system)}</td><td>${qtyFmt(x.qty)}</td><td>${money(Math.abs(Number(x.qty||0)*Number(x.rate||0)))}</td></tr>`;
  document.getElementById('shortTopTable').innerHTML=topHead+(shortTop.length?shortTop.map(topRow).join(''):'<tr><td colspan="4" style="text-align:center;color:#94a3b8">No SHORT items</td></tr>');
  document.getElementById('excessTopTable').innerHTML=topHead+(excessTop.length?excessTop.map(topRow).join(''):'<tr><td colspan="4" style="text-align:center;color:#94a3b8">No EXCESS items</td></tr>');
@@ -911,6 +988,23 @@ function renderDash(){
  document.getElementById('dateTable').innerHTML='<tr><th>Closing Date</th><th>System Value</th><th>Physical Value</th><th>Short Value</th><th>Excess Value</th><th>Net Variance</th></tr>'+
    dt.map(q=>{let a=r.filter(x=>x.date===q.d);return `<tr><td>${q.d}</td><td>${money(a.reduce((z,x)=>z+x.system*x.rate,0))}</td><td>${money(a.reduce((z,x)=>z+x.physical*x.rate,0))}</td><td class="short">${money(q.s)}</td><td class="excess">${money(q.e)}</td><td>${money(q.n)}</td></tr>`}).join('');
 }
+function normalizeLegacyCountedClosingRecords(){
+ const closings=Array.isArray(data.closings)?data.closings:[];
+ let changed=false;
+ closings.forEach(x=>{
+   if(x && x.importedVariance!=null){
+     const counted=Number(x.importedVariance);
+     if(Number.isFinite(counted)){
+       x.physical=counted;
+       changed=true;
+     }
+     delete x.importedVariance;
+     changed=true;
+   }
+ });
+ return changed;
+}
+
 function renderClosing(){
  let r=rows();
  const head='<tr><th>Document No.</th><th>Date</th><th>SKU</th><th>Item</th><th>System</th><th>Physical</th><th>Var Qty</th><th>Rate</th><th>Value</th><th>Status</th><th>Action</th></tr>';
@@ -918,7 +1012,7 @@ function renderClosing(){
  const source=Array.isArray(data.closings)?data.closings:[];
  const body=r.slice().reverse().map((x,revIndex)=>{
    const dataIndex=source.length-1-revIndex;
-   return `<tr><td>${esc(x.docNo||'-')}</td><td>${x.date||'-'}</td><td>${esc(x.sku)}</td><td>${esc(x.item)}</td><td>${Number(x.system||0).toFixed(3)}</td><td>${Number(x.physical||0).toFixed(3)}</td><td>${Number(x.varQty||0).toFixed(3)}</td><td>${money(x.rate)}</td><td>${money(x.value)}</td><td><span class="badge ${x.type==='SHORT'?'bshort':x.type==='EXCESS'?'bexcess':'bmatch'}">${x.type}</span></td><td>${canEdit?`<button class="btn light small-btn" onclick="editClosingQty('${esc(x.date)}','${esc(x.sku)}')">Edit Qty</button> <button class="btn danger small-btn" onclick="deleteClosingLine(${dataIndex})">Delete</button>`:'—'}</td></tr>`;
+   return `<tr><td>${esc(x.docNo||'-')}</td><td>${x.date||'-'}</td><td>${esc(x.sku)}</td><td>${esc(x.item)}</td><td>${Number(x.system||0).toFixed(3)}</td><td>${Number(x.physical||0).toFixed(3)}</td><td>${Number(x.qty||0).toFixed(3)}</td><td>${money(x.rate)}</td><td>${money(x.value)}</td><td><span class="badge ${x.type==='SHORT'?'bshort':x.type==='EXCESS'?'bexcess':'bmatch'}">${x.type}</span></td><td>${canEdit?`<button class="btn light small-btn" onclick="editClosingQty('${esc(x.date)}','${esc(x.sku)}')">Edit Qty</button> <button class="btn danger small-btn" onclick="deleteClosingLine(${dataIndex})">Delete</button>`:'—'}</td></tr>`;
  }).join('');
  document.getElementById('closingTable').innerHTML=head+(body||'<tr><td colspan="11" style="text-align:center;color:#94a3b8">No closing entries</td></tr>');
 }
@@ -940,7 +1034,7 @@ function editClosingQty(date,sku){
  const idx=data.closings.findIndex(x=>String(x.date||'')===String(date||'')&&String(x.sku||'').toLowerCase()===String(sku||'').toLowerCase());
  if(idx<0)return alert('Closing record not found.');
  const rec=data.closings[idx];
- const currentSystem=Number(rec.system||0), currentPhysical=Number(rec.physical||0);
+ const currentSystem=effectiveSystemQtyForClosing(rec), currentPhysical=Number.isFinite(Number(rec.importedVariance))?Number(rec.importedVariance):Number(rec.physical||0);
  const systemText=prompt('Enter System Qty:',String(currentSystem));
  if(systemText===null)return;
  const physicalText=prompt('Enter Physical Qty:',String(currentPhysical));
@@ -1110,6 +1204,48 @@ function renderRates(){
 }
 
 function renderAudit(){document.getElementById('auditTable').innerHTML='<tr><th>Date/Time</th><th>Updated By</th><th>Action</th></tr>'+data.audit.slice().reverse().map(x=>`<tr><td>${x.time||'-'}</td><td>${x.by||'-'}</td><td>${x.action||'-'}</td></tr>`).join('')}
+function previewClosingDateDelete(){
+ if(role!=='Admin')return alert('Admin only');
+ const date=String(document.getElementById('adminDeleteClosingDate')?.value||'').trim();
+ const countEl=document.getElementById('adminDeleteClosingCount');
+ const result=document.getElementById('adminDeleteClosingResult');
+ if(!date){
+   if(countEl)countEl.value='0';
+   if(result)result.innerHTML='';
+   return;
+ }
+ const matches=(Array.isArray(data.closings)?data.closings:[]).filter(x=>String(x.date||'')===date);
+ if(countEl)countEl.value=String(matches.length);
+ if(result){
+   if(matches.length){
+     const docs=matches.map(x=>esc(x.docNo||'-')).join(', ');
+     result.innerHTML='<span class="danger">'+matches.length+' closing entr'+(matches.length===1?'y':'ies')+' found for '+esc(date)+'. Documents: '+docs+'</span>';
+   }else{
+     result.innerHTML='<span class="muted">No Inventory Closing entries found for '+esc(date)+'.</span>';
+   }
+ }
+}
+async function deleteClosingDateData(){
+ if(role!=='Admin')return alert('Admin only');
+ const date=String(document.getElementById('adminDeleteClosingDate')?.value||'').trim();
+ if(!date)return alert('Select the closing date to delete.');
+ const matches=(Array.isArray(data.closings)?data.closings:[]).filter(x=>String(x.date||'')===date);
+ const count=matches.length;
+ if(!count)return alert('No Inventory Closing entries found for '+date+'.');
+ const docs=matches.map(x=>x.docNo||x.item||x.sku).slice(0,8).join(', ')+(count>8?' ...':'');
+ if(!confirm('Delete ALL '+count+' Inventory Closing entr'+(count===1?'y':'ies')+' for '+date+'?\n\nDocuments: '+docs+'\n\nThis will permanently remove those closing entries from Firebase.'))return;
+ if(!(await adminPasswordCheck('delete all Inventory Closing entries for '+date)))return;
+ data.closings=(Array.isArray(data.closings)?data.closings:[]).filter(x=>String(x.date||'')!==date);
+ data.audit=remoteArray(data.audit);
+ data.audit.push({time:new Date().toLocaleString(),by:loggedEmail||'admin',action:'Inventory Closing Date Data Deleted',sku:date,old:count,new:'0'});
+ await saveRemote();
+ localStorage.setItem(KEY,JSON.stringify(data));
+ renderAll();
+ const countEl=document.getElementById('adminDeleteClosingCount'); if(countEl)countEl.value='0';
+ const result=document.getElementById('adminDeleteClosingResult'); if(result)result.innerHTML='<span class="success">Deleted '+count+' Inventory Closing entr'+(count===1?'y':'ies')+' for '+esc(date)+'.</span>';
+ alert('Deleted '+count+' Inventory Closing entr'+(count===1?'y':'ies')+' for '+date+'.');
+}
+
 function searchClosingDocument(){
  if(role!=='Admin')return alert('Admin only');
  const q=String(document.getElementById('adminDocSearch')?.value||'').trim().toLowerCase();
@@ -1145,6 +1281,22 @@ async function deleteClosingDocument(index){
  data.audit.push({time:new Date().toLocaleString(),by:loggedEmail||'admin',action:'Closing Document Deleted'});
  save();renderAll();
  const el=document.getElementById('adminDocResult'); if(el)el.innerHTML='<span class="success">Document deleted.</span>';
+}
+
+async function clearInventoryClosingData(){
+ if(role!=='Admin')return alert('Admin only');
+ if(!confirm('This will permanently delete ALL Inventory Closing entries and ALL imported Counted Stock data. System Stock, Rates, Active Item Master, Users and Closing Schedule will remain. Continue?'))return;
+ if(!(await adminPasswordCheck('clear all Inventory Closing data')))return;
+ data.closings=[];
+ data.countedStock=[];
+ data.audit=remoteArray(data.audit);
+ data.audit.push({time:new Date().toLocaleString(),by:loggedEmail||'admin',action:'All Inventory Closing and Counted Stock cleared'});
+ data.maintenance=data.maintenance||{};
+ data.maintenance.inventoryClosingResetV2=true;
+ await saveRemote();
+ localStorage.setItem(KEY,JSON.stringify(data));
+ renderAll();
+ alert('Inventory Closing entries and Counted Stock have been cleared.');
 }
 
 function addClosing(){
@@ -1200,11 +1352,14 @@ function importSystemStockCSV(){
    matrix.slice(1).forEach((r,i)=>{
     const line=i+2,item=(r[ix('item_name')]||'').trim(),category=(r[ix('category_name')]||'').trim(),qty=Number(String(r[ix('quantity_available')]||'').replace(/,/g,'')),unit=(r[ix('unit')]||'').trim();
     const master=masterForItem(item);
-    if(!item||!category||!unit||Number.isNaN(qty)||!master){errors.push('Line '+line+(master?'':' - item not found in Rate Update'));return;}
+    if(!item||!category||!unit||Number.isNaN(qty)||!master){errors.push('Line '+line+(master?'':' - item not found in Active Item Master'));return;}
     const sku=master.sku,subCategory=master.subcat||'';
     data.systemStock.push({date:closingDate,sku,item_name:item,category_name:master.category||category,sub_category_name:subCategory,quantity_available:qty,unit});
-    // Keep any existing Inventory Closing records for this date synchronized with the uploaded System Stock snapshot.
-    data.closings.filter(x=>String(x.date||'')===closingDate && String(x.sku||'').trim().toLowerCase()===String(sku||'').trim().toLowerCase()).forEach(x=>{x.system=qty;x.systemSource='System Stock Snapshot';});
+    // Synchronize any existing Inventory Closing record for the same date/SKU.
+    // This fixes the case where Counted Stock was imported before System Stock.
+    data.closings=remoteArray(data.closings);
+    data.closings.filter(c=>String(c.date||'')===closingDate && String(c.sku||'').toLowerCase()===String(sku||'').toLowerCase())
+      .forEach(c=>{c.system=qty;c.uom=c.uom||unit;});
     added++;
    });
    data.audit.push({time:new Date().toLocaleString(),by:loggedEmail||'admin',action:'System Stock Snapshot Import'});
@@ -1359,16 +1514,19 @@ function importCountedStockFile(input){
      const qtyText=String(r[ix('counted qty')]??'').replace(/,/g,'').trim();
      const countedQty=Number(qtyText);
      const master=masterForItem(itemName);
-     if(!itemName||!uom||!category||Number.isNaN(countedQty)||!master){errors.push('Line '+(i+2)+(master?'':' - item not found in Rate Update'));return;}
-     imported.push({date:closingDate,itemNo:master.sku,itemName,uom,category:master.category||category,subCategory:master.subcat||'',countedQty});
+     if(!itemName||!uom||!category||Number.isNaN(countedQty)||!master){errors.push('Line '+(i+2)+(master?'':' - item not found in Active Item Master'));return;}
+     imported.push({date:closingDate,itemNo:master.sku,itemName:master.item||itemName,uom,category:master.category||'',subCategory:master.subcat||'',countedQty});
    });
    data.countedStock=remoteArray(data.countedStock).filter(x=>String(x.date||'')!==closingDate).concat(imported);
+   // Bulk Counted Stock import uses ONE document number for the whole closing date.
+   // Manual one-by-one entries continue to receive their own unique document number.
+   const bulkDocNo=nextClosingDocumentNumber(closingDate);
    imported.forEach(c=>{
      const stock=stockForDate(c.itemNo,closingDate);
      const systemQty=stock?Number(stock.quantity_available):0;
      const rate=applicableRate(c.itemNo,closingDate,0);
      const idx=data.closings.findIndex(x=>x.date===closingDate && String(x.sku||'').toLowerCase()===c.itemNo.toLowerCase());
-     const rec={docNo:idx>=0?(data.closings[idx].docNo||nextClosingDocumentNumber(closingDate)):nextClosingDocumentNumber(closingDate),date:closingDate,sku:c.itemNo,item:c.itemName,uom:c.uom,cat:c.category,subcat:c.subCategory,system:systemQty,physical:systemQty+c.countedQty,rate:rate,importedVariance:c.countedQty};
+     const rec={docNo:idx>=0?(data.closings[idx].docNo||bulkDocNo):bulkDocNo,date:closingDate,sku:c.itemNo,item:c.itemName,uom:c.uom,cat:c.category,subcat:c.subCategory,system:systemQty,physical:c.countedQty,rate:rate};
      if(idx>=0)data.closings[idx]=rec; else data.closings.push(rec);
    });
    data.audit.push({time:new Date().toLocaleString(),by:loggedEmail||'admin',action:'Bulk Counted Stock Import'});
