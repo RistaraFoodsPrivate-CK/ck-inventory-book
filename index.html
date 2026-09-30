@@ -809,10 +809,18 @@ function updateRateItemFromSelection(){
  }
 }
 
-function stockForDate(sku,date){
+function stockForDate(sku,date,itemName){
  const d=String(date||'').trim();
+ const key=String(sku||'').trim().toLowerCase();
+ const itemKey=String(itemName||'').trim().toLowerCase();
  if(!d)return null;
- return remoteArray(data.systemStock).find(x=>String(x.sku||'').toLowerCase()===String(sku||'').toLowerCase()&&String(x.date||'')===d)||null;
+ const list=remoteArray(data.systemStock);
+ // Primary match: same closing date + normalized SKU.
+ let hit=list.find(x=>String(x.date||'').trim()===d && String(x.sku||'').trim().toLowerCase()===key);
+ // Fallback: same closing date + normalized item name. This protects against
+ // harmless SKU formatting differences between the Active Item Master and upload.
+ if(!hit && itemKey) hit=list.find(x=>String(x.date||'').trim()===d && String(x.item_name||x.item||'').trim().toLowerCase()===itemKey);
+ return hit||null;
 }
 function countedForDate(sku,date){
  const d=String(date||'').trim();
@@ -869,7 +877,7 @@ function refreshSubCategoryFilter(){
  if(list.includes(current))el.value=current;
 }
 function effectiveSystemQtyForClosing(x){
- const snap=stockForDate(x?.sku,x?.date);
+ const snap=stockForDate(x?.sku,x?.date,x?.item);
  if(snap && snap.quantity_available!==undefined && snap.quantity_available!=='') return Number(snap.quantity_available);
  return Number(x?.system||0);
 }
@@ -1305,7 +1313,7 @@ function addClosing(){
  const itemInput=document.getElementById('cItem');
  const itemRec=masterForSku(sku);
  const closingDate=document.getElementById('cDate')?.value||'';
- const stock=stockForDate(sku,closingDate);
+ const stock=stockForDate(sku,closingDate,itemRec?.item||itemInput?.value||'');
  const counted=countedForDate(sku,closingDate);
  const systemEl=document.getElementById('cSystem');
  const systemValue=systemEl?.value!==''?Number(systemEl.value):(stock?Number(stock.quantity_available):NaN);
@@ -1522,7 +1530,7 @@ function importCountedStockFile(input){
    // Manual one-by-one entries continue to receive their own unique document number.
    const bulkDocNo=nextClosingDocumentNumber(closingDate);
    imported.forEach(c=>{
-     const stock=stockForDate(c.itemNo,closingDate);
+     const stock=stockForDate(c.itemNo,closingDate,c.itemName);
      const systemQty=stock?Number(stock.quantity_available):0;
      const rate=applicableRate(c.itemNo,closingDate,0);
      const idx=data.closings.findIndex(x=>x.date===closingDate && String(x.sku||'').toLowerCase()===c.itemNo.toLowerCase());
@@ -1560,7 +1568,7 @@ function updateAutoClosingRate(){
  el.value=rate||'';
  const counted=countedForDate(sku,date);
  if(counted && document.getElementById('cPhysical') && document.getElementById('cPhysical').value==='') document.getElementById('cPhysical').value=counted.countedQty;
- const stock=stockForDate(sku,date);
+ const stock=stockForDate(sku,date,document.getElementById('cItem')?.value||'');
  if(stock && document.getElementById('cSystem')) document.getElementById('cSystem').value=Number(stock.quantity_available);
 }
 
