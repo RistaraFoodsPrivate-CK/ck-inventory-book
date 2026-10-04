@@ -29,6 +29,8 @@ h1{margin:0 0 5px;font-size:25px}.sub{color:#64748b;margin-bottom:20px}.filters{
 .admin-tools-card{margin-bottom:14px}.admin-tool-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.admin-tool{border:1px solid #dfe6ee;background:#f8fafc;border-radius:12px;padding:14px;text-align:left;cursor:pointer;min-height:82px;transition:.15s}.admin-tool:hover,.admin-tool.active{background:#eef6ff;border-color:#2477e8;box-shadow:0 3px 10px #2477e81a}.admin-tool span{font-size:20px;display:block;margin-bottom:5px}.admin-tool b{display:block;color:#1e293b;font-size:13px}.admin-tool small{display:block;color:#64748b;font-size:11px;margin-top:4px}.admin-tool.log-tool{background:#fffaf0;border-color:#fde3a7}.admin-panel{display:none;margin-top:14px}.admin-panel.open{display:block}.template-box{margin-top:12px;padding:14px;border:1px solid #e4e9f0;background:#f8fafc;border-radius:12px;display:flex;justify-content:space-between;gap:14px;align-items:center}.template-actions{display:flex;gap:10px;align-items:end;flex-wrap:wrap}.small-sub{margin:4px 0 0;font-size:11px}.log-section{margin-top:14px;border:1px solid #e4e9f0;border-radius:12px;padding:12px}.log-heading{font-weight:800;margin-bottom:10px;color:#334155}@media(max-width:900px){.admin-tool-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.template-box{display:block}.template-actions{margin-top:12px}}@media(max-width:550px){.admin-tool-grid{grid-template-columns:1fr}.admin-tool{min-height:72px}.template-actions{display:block}.template-actions .btn,.template-actions .field{margin-bottom:8px}.template-actions .field input{width:100%}}
 </style>
 <style id="counted-stock-io-css">#countedStockIOCard .btn{border:0;border-radius:10px;padding:10px 15px;background:#2478e5;color:#fff;font-weight:600}#countedStockIOCard .btn.secondary{background:#5f6b7a}#countedStockIOCard .muted{color:#65758b}#countedStockIOCard table{border-collapse:collapse}#countedStockIOCard th,#countedStockIOCard td{padding:10px 12px;border-bottom:1px solid #e6ebf1;text-align:left;white-space:nowrap}</style>
+<style id="inventory-collapse-css">
+.collapse-card{overflow:hidden}.collapse-header{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;border:0;background:transparent;color:inherit;font:inherit;font-weight:800;font-size:14px;padding:0 0 12px;cursor:pointer;text-align:left}.collapse-arrow{width:26px;height:26px;border-radius:7px;display:inline-flex;align-items:center;justify-content:center;background:#eef2f7;font-size:16px;line-height:1;transition:transform .15s ease}.collapse-header[aria-expanded="false"] .collapse-arrow{transform:rotate(180deg)}.collapse-body{display:block}.collapse-body.is-collapsed{display:none}.collapse-card .collapse-header:hover .collapse-arrow{background:#e2e8f0}</style>
 
 <style id="ck-updates-css">
 .brand-new{display:flex;align-items:center;gap:10px;padding:14px 12px!important}
@@ -256,11 +258,19 @@ body, button, input, select, textarea { font-size: calc(1em - 2px); }
 <div class="field"><label>Rate (Auto)</label><input type="number" id="cRate" readonly placeholder="Auto from latest applicable rate"></div>
 <button class="btn primary" onclick="addClosing()">Add Closing</button>
 </div></div>
-<div class="card" style="margin-top:14px"><div class="panel-title">Closing Entries</div><div class="tablewrap"><table class="table" id="closingTable"></table></div></div>
+<div class="card collapse-card" style="margin-top:14px">
+  <button type="button" class="collapse-header" onclick="toggleCollapseCard('closingEntriesBody',this)" aria-expanded="true">
+    <span>Closing Entries</span><span class="collapse-arrow">⌃</span>
+  </button>
+  <div id="closingEntriesBody" class="collapse-body"><div class="tablewrap"><table class="table" id="closingTable"></table></div></div>
+</div>
 
-<div class="card" id="countedStockIOCard" style="margin-top:14px">
-  <div class="panel-title">Counted Stock Import / Export</div>
-  <p class="muted">Upload counted stock in this format: Item Name, UOM, Category, Counted QTY. SKU, Category and Sub Category are taken automatically from the Active Item Master. UOM is retained from the upload.</p>
+<div class="card collapse-card" id="countedStockIOCard" style="margin-top:14px">
+  <button type="button" class="collapse-header" onclick="toggleCollapseCard('countedStockIOBody',this)" aria-expanded="true">
+    <span>Counted Stock Import / Export</span><span class="collapse-arrow">⌃</span>
+  </button>
+  <div id="countedStockIOBody" class="collapse-body">
+  <p class="muted">Upload counted stock in this format: Item Name, Counted QTY. Item Number, UOM, Category and Sub Category are taken automatically from the Active Item Master.</p>
   <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:12px 0;">
     <button type="button" class="btn" onclick="downloadCountedStockTemplate()">⬇ Download Template</button>
     <label class="btn" style="cursor:pointer;">⬆ Import Counted Stock<input id="countedStockFile" type="file" accept=".csv,text/csv" style="display:none" onchange="importCountedStockFile(this)"></label>
@@ -269,9 +279,10 @@ body, button, input, select, textarea { font-size: calc(1em - 2px); }
   <div id="countedStockImportStatus" class="muted" style="margin-top:8px;"></div><div class="workflow-note">Workflow: set the Closing Date → import the counted stock CSV → the imported Counted QTY becomes Physical Qty → System Qty comes from Current System Stock → latest applicable rate is used → Dashboard / Variance Report updates automatically.</div>
   <div style="overflow:auto;margin-top:12px;">
     <table id="countedStockPreviewTable" style="width:100%;min-width:700px;">
-      <thead><tr><th>Item Name</th><th>UOM</th><th>Category</th><th>Counted QTY</th></tr></thead>
+      <thead><tr><th>Item Name</th><th>UOM (Master)</th><th>Category (Master)</th><th>Counted QTY</th></tr></thead>
       <tbody id="countedStockPreviewBody"><tr><td colspan="4" class="muted">No counted stock imported yet.</td></tr></tbody>
     </table>
+  </div>
   </div>
 </div>
 </section>
@@ -326,10 +337,11 @@ body, button, input, select, textarea { font-size: calc(1em - 2px); }
 
 <div class="admin-panel card" id="activeItemMasterCard">
 <div class="panel-title">Active Item Master</div>
-<div class="sub">Permanent master for Item No, Item Name, Category and Sub Category. Dashboard, Inventory Closing, Variance Report, System Stock and Counted Stock use this master.</div>
+<div class="sub">Permanent master for Item No, Item Name, UOM, Category and Sub Category. Dashboard, Inventory Closing, Variance Report, System Stock, Counted Stock and Rates use this master.</div>
 <div class="filters" style="margin-top:12px">
 <div class="field"><label>Item Number / SKU</label><input id="amSku" placeholder="Example: 1637"></div>
 <div class="field"><label>Item Name</label><input id="amItem" placeholder="Example: Eggless sponge cake"></div>
+<div class="field"><label>UOM</label><input id="amUom" placeholder="Example: KG"></div>
 <div class="field"><label>Category</label><input id="amCategory" placeholder="Example: RM BREADS, ROTIS & PACKAGED FOODS"></div>
 <div class="field"><label>Sub Category</label><input id="amSubCat" placeholder="Example: COGS"></div>
 <button class="btn primary" type="button" onclick="saveActiveItem()">Save / Update Item</button>
@@ -350,7 +362,7 @@ body, button, input, select, textarea { font-size: calc(1em - 2px); }
 <div class="field"><label>Effective Date</label><input type="date" id="rDate"></div>
 <div class="field"><label>SKU</label><input id="rSku" readonly placeholder="Auto"></div>
 <div class="field"><label>Item Name</label><input id="rItem" list="rateItemList" autocomplete="off" placeholder="Type item name"><datalist id="rateItemList"></datalist></div>
-<div class="field"><label>Unit</label><input id="rUnit" value="KG"></div>
+<div class="field"><label>UOM</label><input id="rUnit" readonly placeholder="Auto from Active Item Master"></div>
 <div class="field"><label>Sub Category</label><input id="rSubCat" readonly placeholder="Auto"></div>
 <div class="field"><label>Rate</label><input type="number" id="rRate"></div>
 <button class="btn primary" onclick="addRate()">Save Rate</button>
@@ -366,8 +378,8 @@ body, button, input, select, textarea { font-size: calc(1em - 2px); }
 
 <div class="admin-panel card" id="systemStockCard">
 <div class="panel-title">Current System Stock Import</div>
-<div class="sub">Download the template, fill current system stock, select the closing date, and upload. SKU, Category and Sub Category are matched from Active Item Master.</div>
-<div class="template-box"><div><b>System Stock Upload</b><div class="sub small-sub">Required data: item name, category, quantity available and unit.</div></div><div class="template-actions"><div class="field"><label>Closing Date</label><input type="date" id="systemStockDate"></div><button class="btn light" onclick="downloadSystemStockTemplate()">⬇ Download Template</button><div class="field"><label>CSV File</label><input type="file" id="systemStockCsv" accept=".csv,text/csv"></div><button class="btn primary" onclick="importSystemStockCSV()">⬆ Upload Stock</button></div></div>
+<div class="sub">Download the template, fill current system stock, select the closing date, and upload. Item Number, UOM, Category and Sub Category are taken from Active Item Master.</div>
+<div class="template-box"><div><b>System Stock Upload</b><div class="sub small-sub">Required data: item_name and quantity_available. Item Number, UOM, Category and Sub Category are taken from Active Item Master.</div></div><div class="template-actions"><div class="field"><label>Closing Date</label><input type="date" id="systemStockDate"></div><button class="btn light" onclick="downloadSystemStockTemplate()">⬇ Download Template</button><div class="field"><label>CSV File</label><input type="file" id="systemStockCsv" accept=".csv,text/csv"></div><button class="btn primary" onclick="importSystemStockCSV()">⬆ Upload Stock</button></div></div>
 <div id="systemStockStatus" style="margin-top:10px"></div>
 <div class="tablewrap" style="margin-top:14px"><table class="table" id="systemStockTable"></table></div>
 </div>
@@ -473,6 +485,23 @@ async function loadRemoteData(){
     data.audit=remoteArray(data.audit);
     data.audit.push({time:new Date().toLocaleString(),by:'system',action:'Inventory Closing and Counted Stock reset for clean start'});
     localStorage.setItem(KEY,JSON.stringify(data));
+    await firebaseDb.ref('appData').set(remoteSafeData());
+  }
+  // One-time UOM migration for existing Active Item Master records.
+  // If an older master record has no UOM, copy the latest historical rate UOM into the master.
+  // After this migration, all new imports and report classifications read UOM from Active Item Master.
+  let uomMigrated=false;
+  remoteArray(data.activeItems).forEach(m=>{
+    if(String(m.unit||'').trim())return;
+    const legacyRate=latestRateRecordForSku(m.sku);
+    if(legacyRate && String(legacyRate.unit||'').trim()){
+      m.unit=String(legacyRate.unit).trim();
+      uomMigrated=true;
+    }
+  });
+  if(uomMigrated){
+    data.audit=remoteArray(data.audit);
+    data.audit.push({time:new Date().toLocaleString('en-IN'),by:'system',action:'Active Item Master UOM migration from legacy rate data'});
     await firebaseDb.ref('appData').set(remoteSafeData());
   }
   firebaseDataLoaded=true;
@@ -647,15 +676,13 @@ function latestRateRecordForSku(sku){
 function masterForSku(sku){
  const active=activeItemBySku(sku);
  const rate=latestRateRecordForSku(sku);
- if(active) return {sku:active.sku,item:active.item,category:active.category,subcat:active.subcat,unit:rate?.unit||'',rate:Number(rate?.rate||0),date:rate?.date||'',timestamp:rate?.timestamp||rate?.timeStamp||''};
+ if(active) return {sku:active.sku,item:active.item,category:active.category,subcat:active.subcat,unit:active.unit||'',rate:Number(rate?.rate||0),date:rate?.date||'',timestamp:rate?.timestamp||rate?.timeStamp||''};
  if(rate) return {sku:rate.sku,item:rate.item||'',category:rate.category||'',subcat:rate.subcat||'',unit:rate.unit||'',rate:Number(rate.rate||0),date:rate.date||'',timestamp:rate.timestamp||rate.timeStamp||''};
  return null;
 }
 function masterForItem(item){
  const active=activeItemByName(item);
- if(active)return masterForSku(active.sku);
- const typed=String(item||'').trim().toLowerCase();
- return latestRateMaster().find(r=>String(r.item||'').trim().toLowerCase()===typed)||null;
+ return active ? masterForSku(active.sku) : null;
 }
 function latestRateMaster(){
  const map={};
@@ -671,19 +698,20 @@ function saveActiveItem(){
  if(role!=='Admin')return alert('Admin only');
  const sku=String(document.getElementById('amSku')?.value||'').trim();
  const item=String(document.getElementById('amItem')?.value||'').trim();
+ const unit=String(document.getElementById('amUom')?.value||'').trim();
  const category=String(document.getElementById('amCategory')?.value||'').trim();
  const subcat=String(document.getElementById('amSubCat')?.value||'').trim();
- if(!sku||!item||!category||!subcat)return alert('Enter Item Number, Item Name, Category and Sub Category.');
+ if(!sku||!item||!unit||!category||!subcat)return alert('Enter Item Number, Item Name, UOM, Category and Sub Category.');
  const existing=remoteArray(data.activeItems).find(x=>String(x.sku||'').trim().toLowerCase()===sku.toLowerCase());
- if(existing){existing.sku=sku;existing.item=item;existing.category=category;existing.subcat=subcat;}
- else data.activeItems.push({sku,item,category,subcat});
+ if(existing){existing.sku=sku;existing.item=item;existing.unit=unit;existing.category=category;existing.subcat=subcat;}
+ else data.activeItems.push({sku,item,unit,category,subcat});
  data.audit.push({time:new Date().toLocaleString('en-IN'),by:loggedEmail||'admin',action:'Active Item Master Updated'});
  save();renderAll();clearActiveItemForm();
- const st=document.getElementById('activeItemStatus');if(st)st.innerHTML='<span class="success">Active Item Master saved. All reports will use this classification for SKU '+esc(sku)+'.</span>';
+ const st=document.getElementById('activeItemStatus');if(st)st.innerHTML='<span class="success">Active Item Master saved. Item Number, UOM, Category and Sub Category will now be taken from this master for SKU '+esc(sku)+'.</span>';
 }
-function clearActiveItemForm(){['amSku','amItem','amCategory','amSubCat'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});}
+function clearActiveItemForm(){['amSku','amItem','amUom','amCategory','amSubCat'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});}
 function downloadActiveItemTemplate(){
- const rows=[['Item Number','Item Name','Category','Sub Category'],['1637','Eggless sponge cake','RM BREADS, ROTIS & PACKAGED FOODS','COGS']];
+ const rows=[['Item Number','Item Name','UOM','Category','Sub Category'],['1637','Eggless sponge cake','KG','RM BREADS, ROTIS & PACKAGED FOODS','COGS']];
  download('active_item_master_template.csv','text/csv;charset=utf-8','\ufeff'+rows.map(r=>r.map(csvEscape).join(',')).join('\r\n'));
 }
 function importActiveItemCSV(){
@@ -693,14 +721,14 @@ function importActiveItemCSV(){
   try{
    const matrix=parseSimpleCSV(String(reader.result||''));if(matrix.length<2)throw new Error('CSV has no item data.');
    const headers=matrix[0].map(x=>String(x).trim().toLowerCase());
-   const required=['item number','item name','category','sub category'];
+   const required=['item number','item name','uom','category','sub category'];
    const missing=required.filter(x=>!headers.includes(x));if(missing.length)throw new Error('Missing required columns: '+missing.join(', '));
    const ix=x=>headers.indexOf(x);let imported=0,errors=[];
    matrix.slice(1).filter(r=>r.some(v=>String(v||'').trim()!=='')).forEach((r,i)=>{
-    const sku=String(r[ix('item number')]||'').trim(),item=String(r[ix('item name')]||'').trim(),category=String(r[ix('category')]||'').trim(),subcat=String(r[ix('sub category')]||'').trim();
-    if(!sku||!item||!category||!subcat){errors.push('Line '+(i+2));return;}
+    const sku=String(r[ix('item number')]||'').trim(),item=String(r[ix('item name')]||'').trim(),unit=String(r[ix('uom')]||'').trim(),category=String(r[ix('category')]||'').trim(),subcat=String(r[ix('sub category')]||'').trim();
+    if(!sku||!item||!unit||!category||!subcat){errors.push('Line '+(i+2));return;}
     const old=remoteArray(data.activeItems).find(x=>String(x.sku||'').trim().toLowerCase()===sku.toLowerCase());
-    if(old){old.sku=sku;old.item=item;old.category=category;old.subcat=subcat;}else data.activeItems.push({sku,item,category,subcat});
+    if(old){old.sku=sku;old.item=item;old.unit=unit;old.category=category;old.subcat=subcat;}else data.activeItems.push({sku,item,unit,category,subcat});
     imported++;
    });
    data.audit.push({time:new Date().toLocaleString('en-IN'),by:loggedEmail||'admin',action:'Bulk Active Item Master Import'});
@@ -714,15 +742,15 @@ function exportActiveItemMaster(){
  if(role!=='Admin')return alert('Only Admin can export Active Item Master.');
  const rows=remoteArray(data.activeItems).sort((a,b)=>String(a.sku).localeCompare(String(b.sku)));
  if(!rows.length)return alert('No Active Item Master records available.');
- const lines=[['Item Number','Item Name','Category','Sub Category'],...rows.map(x=>[x.sku,x.item,x.category,x.subcat])];
+ const lines=[['Item Number','Item Name','UOM','Category','Sub Category'],...rows.map(x=>[x.sku,x.item,x.unit||'',x.category,x.subcat])];
  download('active_item_master.csv','text/csv;charset=utf-8','\ufeff'+lines.map(r=>r.map(csvEscape).join(',')).join('\r\n'));
 }
 function renderActiveItemMaster(){
  const el=document.getElementById('activeItemMasterTable');if(!el)return;
  const list=remoteArray(data.activeItems).slice().sort((a,b)=>String(a.sku).localeCompare(String(b.sku)));
- el.innerHTML='<tr><th>Item Number</th><th>Item Name</th><th>Category</th><th>Sub Category</th><th>Action</th></tr>'+list.map((x,i)=>`<tr><td>${esc(x.sku)}</td><td>${esc(x.item)}</td><td>${esc(x.category)}</td><td>${esc(x.subcat)}</td><td><button class="btn light" type="button" onclick="editActiveItem(${i})">Edit</button> <button class="btn light" type="button" onclick="deleteActiveItem(${i})">Delete</button></td></tr>`).join('')+(list.length?'':'<tr><td colspan="5" class="muted">No active items added yet.</td></tr>');
+ el.innerHTML='<tr><th>Item Number</th><th>Item Name</th><th>UOM</th><th>Category</th><th>Sub Category</th><th>Action</th></tr>'+list.map((x,i)=>`<tr><td>${esc(x.sku)}</td><td>${esc(x.item)}</td><td>${esc(x.unit||'')}</td><td>${esc(x.category)}</td><td>${esc(x.subcat)}</td><td><button class="btn light" type="button" onclick="editActiveItem(${i})">Edit</button> <button class="btn light" type="button" onclick="deleteActiveItem(${i})">Delete</button></td></tr>`).join('')+(list.length?'':'<tr><td colspan="6" class="muted">No active items added yet.</td></tr>');
 }
-function editActiveItem(index){const list=remoteArray(data.activeItems).slice().sort((a,b)=>String(a.sku).localeCompare(String(b.sku)));const x=list[index];if(!x)return;document.getElementById('amSku').value=x.sku||'';document.getElementById('amItem').value=x.item||'';document.getElementById('amCategory').value=x.category||'';document.getElementById('amSubCat').value=x.subcat||'';}
+function editActiveItem(index){const list=remoteArray(data.activeItems).slice().sort((a,b)=>String(a.sku).localeCompare(String(b.sku)));const x=list[index];if(!x)return;document.getElementById('amSku').value=x.sku||'';document.getElementById('amItem').value=x.item||'';document.getElementById('amUom').value=x.unit||'';document.getElementById('amCategory').value=x.category||'';document.getElementById('amSubCat').value=x.subcat||'';}
 async function deleteActiveItem(index){
  if(role!=='Admin')return alert('Admin only');
  const list=remoteArray(data.activeItems).slice().sort((a,b)=>String(a.sku).localeCompare(String(b.sku)));const x=list[index];if(!x)return;
@@ -733,7 +761,7 @@ async function deleteActiveItem(index){
 function refreshClosingItemDropdown(){
  const el=document.getElementById('cItem'), listEl=document.getElementById('closingItemList'); if(!el||!listEl)return;
  const current=String(el.value||'').trim();
- const list=remoteArray(data.activeItems).length?remoteArray(data.activeItems).map(m=>({...m,unit:latestRateRecordForSku(m.sku)?.unit||'',rate:Number(latestRateRecordForSku(m.sku)?.rate||0),date:latestRateRecordForSku(m.sku)?.date||''})):latestRateMaster().sort((a,b)=>String(a.item||'').localeCompare(String(b.item||''))||String(a.sku||'').localeCompare(String(b.sku||'')));
+ const list=remoteArray(data.activeItems).length?remoteArray(data.activeItems).map(m=>({...m,unit:m.unit||'',rate:Number(latestRateRecordForSku(m.sku)?.rate||0),date:latestRateRecordForSku(m.sku)?.date||''})):latestRateMaster().sort((a,b)=>String(a.item||'').localeCompare(String(b.item||''))||String(a.sku||'').localeCompare(String(b.sku||'')));
  listEl.innerHTML=list.map(r=>`<option value="${esc(String(r.item||r.sku||''))}"></option>`).join('');
  if(current) el.value=current;
  updateClosingItemFromSelection();
@@ -742,7 +770,7 @@ function updateClosingItemFromSelection(){
  const itemEl=document.getElementById('cItem'), skuEl=document.getElementById('cSku'), catEl=document.getElementById('cCat');
  if(!itemEl)return;
  const typed=String(itemEl.value||'').trim();
- const list=remoteArray(data.activeItems).length?remoteArray(data.activeItems).map(m=>({...m,unit:latestRateRecordForSku(m.sku)?.unit||'',rate:Number(latestRateRecordForSku(m.sku)?.rate||0),date:latestRateRecordForSku(m.sku)?.date||''})):latestRateMaster();
+ const list=remoteArray(data.activeItems).length?remoteArray(data.activeItems).map(m=>({...m,unit:m.unit||'',rate:Number(latestRateRecordForSku(m.sku)?.rate||0),date:latestRateRecordForSku(m.sku)?.date||''})):latestRateMaster();
  let rec=list.find(r=>String(r.item||'').toLowerCase()===typed.toLowerCase());
  // While typing, automatically use the only matching item when the text uniquely identifies it.
  if(!rec && typed){
@@ -770,7 +798,7 @@ function updateClosingItemFromSelection(){
 }
 function refreshRateItemDropdown(){
  const el=document.getElementById('rItem'), listEl=document.getElementById('rateItemList'); if(!el||!listEl)return;
- const list=remoteArray(data.activeItems).length?remoteArray(data.activeItems).map(m=>({...m,unit:latestRateRecordForSku(m.sku)?.unit||'',rate:Number(latestRateRecordForSku(m.sku)?.rate||0),date:latestRateRecordForSku(m.sku)?.date||''})):latestRateMaster().sort((a,b)=>String(a.item||'').localeCompare(String(b.item||''))||String(a.sku||'').localeCompare(String(b.sku||'')));
+ const list=remoteArray(data.activeItems).length?remoteArray(data.activeItems).map(m=>({...m,unit:m.unit||'',rate:Number(latestRateRecordForSku(m.sku)?.rate||0),date:latestRateRecordForSku(m.sku)?.date||''})):latestRateMaster().sort((a,b)=>String(a.item||'').localeCompare(String(b.item||''))||String(a.sku||'').localeCompare(String(b.sku||'')));
  listEl.innerHTML=list.map(r=>`<option value="${esc(String(r.item||r.sku||''))}"></option>`).join('');
  updateRateItemFromSelection();
 }
@@ -778,7 +806,7 @@ function updateRateItemFromSelection(){
  const itemEl=document.getElementById('rItem'), skuEl=document.getElementById('rSku'), subEl=document.getElementById('rSubCat');
  if(!itemEl)return;
  const typed=String(itemEl.value||'').trim();
- const list=remoteArray(data.activeItems).length?remoteArray(data.activeItems).map(m=>({...m,unit:latestRateRecordForSku(m.sku)?.unit||'',rate:Number(latestRateRecordForSku(m.sku)?.rate||0),date:latestRateRecordForSku(m.sku)?.date||''})):latestRateMaster();
+ const list=remoteArray(data.activeItems).length?remoteArray(data.activeItems).map(m=>({...m,unit:m.unit||'',rate:Number(latestRateRecordForSku(m.sku)?.rate||0),date:latestRateRecordForSku(m.sku)?.date||''})):latestRateMaster();
  let rec=list.find(r=>String(r.item||'').toLowerCase()===typed.toLowerCase());
  if(!rec && typed){
    const matches=list.filter(r=>String(r.item||'').toLowerCase().startsWith(typed.toLowerCase()));
@@ -1020,6 +1048,14 @@ function normalizeLegacyCountedClosingRecords(){
    }
  });
  return changed;
+}
+
+function toggleCollapseCard(bodyId,button){
+ const body=document.getElementById(bodyId);
+ if(!body||!button)return;
+ const open=button.getAttribute('aria-expanded')!=='false';
+ button.setAttribute('aria-expanded',open?'false':'true');
+ body.classList.toggle('is-collapsed',open);
 }
 
 function renderClosing(){
@@ -1306,7 +1342,7 @@ function addClosing(){
  alert('Closing saved with automatic applicable rate: '+money(rateValue)+'\nEntry fields have been cleared for the next entry.');
 }
 function downloadSystemStockTemplate(){
- const rows=[['item_name','category_name','quantity_available','unit'],['Rice','Raw Material','125','KG'],['Toor Dal','Raw Material','80','KG']];
+ const rows=[['item_name','quantity_available'],['Rice','125'],['Toor Dal','80']];
  download('current_system_stock_template.csv','text/csv;charset=utf-8','\ufeff'+rows.map(r=>r.map(csvEscape).join(',')).join('\r\n'));
 }
 function importSystemStockCSV(){
@@ -1319,17 +1355,17 @@ function importSystemStockCSV(){
   try{
    const matrix=parseSimpleCSV(reader.result); if(matrix.length<2)return alert('CSV has no data.');
    const headers=matrix[0].map(x=>String(x).trim().toLowerCase());
-   const required=['item_name','category_name','quantity_available','unit'];
+   const required=['item_name','quantity_available'];
    const missing=required.filter(x=>!headers.includes(x)); if(missing.length)return alert('Missing required columns: '+missing.join(', '));
    const ix=x=>headers.indexOf(x); let added=0,updated=0,errors=[];
    // Replace only this date's snapshot; previous closing dates remain untouched.
    data.systemStock=remoteArray(data.systemStock).filter(x=>String(x.date||'')!==closingDate);
    matrix.slice(1).forEach((r,i)=>{
-    const line=i+2,item=(r[ix('item_name')]||'').trim(),category=(r[ix('category_name')]||'').trim(),qty=Number(String(r[ix('quantity_available')]||'').replace(/,/g,'')),unit=(r[ix('unit')]||'').trim();
+    const line=i+2,item=(r[ix('item_name')]||'').trim(),qty=Number(String(r[ix('quantity_available')]||'').replace(/,/g,''));
     const master=masterForItem(item);
-    if(!item||!category||!unit||Number.isNaN(qty)||!master){errors.push('Line '+line+(master?'':' - item not found in Active Item Master'));return;}
+    if(!item||Number.isNaN(qty)||!master||!master.unit){errors.push('Line '+line+(master?'':' - item not found in Active Item Master'));return;}
     const sku=master.sku,subCategory=master.subcat||'';
-    data.systemStock.push({date:closingDate,sku,item_name:item,category_name:master.category||category,sub_category_name:subCategory,quantity_available:qty,unit});
+    data.systemStock.push({date:closingDate,sku,item_name:master.item,category_name:master.category,sub_category_name:subCategory,quantity_available:qty,unit:master.unit});
     added++;
    });
    // Refresh existing Inventory Closing records for this date from the newly uploaded System Stock.
@@ -1355,7 +1391,7 @@ function renderSystemStock(){
  el.innerHTML='<tr><th>Date</th><th>SKU</th><th>Item Name</th><th>Category</th><th>Sub Category</th><th>Quantity Available</th><th>Unit</th></tr>'+
  r.map(x=>`<tr><td>${esc(x.date||'')}</td><td>${esc(x.sku)}</td><td>${esc(x.item_name)}</td><td>${esc(x.category_name)}</td><td>${esc(x.sub_category_name||x.subCategory||'')}</td><td>${Number(x.quantity_available||0).toLocaleString('en-IN')}</td><td>${esc(x.unit)}</td></tr>`).join('');
 }
-function addRate(){if(role!=='Admin')return alert('Admin only');const stamp=new Date().toLocaleString('en-IN',{dateStyle:'medium',timeStyle:'short'});const master=masterForSku(String(rSku.value||'').trim())||masterForItem(String(rItem.value||'').trim());const sku=String(master?.sku||rSku.value||'').trim();if(!master||!sku)return alert('Select an item from Active Item Master first.');let x={date:rDate.value,sku,item:master.item||rItem.value.trim(),unit:master.unit||rUnit.value.trim(),category:master.category||'',subcat:master.subcat||'',rate:Number(rRate.value),by:loggedEmail||'admin',timestamp:stamp};if(!x.date||!x.sku||!x.rate)return alert('Enter effective date and rate');let old=data.rates.filter(a=>String(a.sku||'').toLowerCase()===x.sku.toLowerCase()&&a.date<=x.date).sort((a,b)=>b.date.localeCompare(a.date))[0];data.rates.push(x);data.audit.push({time:stamp,by:loggedEmail||'admin',action:'Rate Update',sku:x.sku,old:old?.rate,new:x.rate});save();renderAll();alert('Rate updated. Item classification comes from Active Item Master; this rate will apply by closing date.')}
+function addRate(){if(role!=='Admin')return alert('Admin only');const stamp=new Date().toLocaleString('en-IN',{dateStyle:'medium',timeStyle:'short'});const master=masterForSku(String(rSku.value||'').trim())||masterForItem(String(rItem.value||'').trim());const sku=String(master?.sku||rSku.value||'').trim();if(!master||!sku||!master.unit)return alert('Select an item with UOM from Active Item Master first.');let x={date:rDate.value,sku,item:master.item,unit:master.unit,category:master.category,subcat:master.subcat,rate:Number(rRate.value),by:loggedEmail||'admin',timestamp:stamp};if(!x.date||!x.sku||!x.rate)return alert('Enter effective date and rate');let old=data.rates.filter(a=>String(a.sku||'').toLowerCase()===x.sku.toLowerCase()&&a.date<=x.date).sort((a,b)=>b.date.localeCompare(a.date))[0];data.rates.push(x);data.audit.push({time:stamp,by:loggedEmail||'admin',action:'Rate Update',sku:x.sku,old:old?.rate,new:x.rate});save();renderAll();alert('Rate updated. Item classification comes from Active Item Master; this rate will apply by closing date.')}
 function parseSimpleCSV(text){
  const src=String(text||'').replace(/^\uFEFF/,'');
  const out=[]; let row=[], field='', quoted=false;
@@ -1450,8 +1486,8 @@ function download(name,type,text){
 /* ===== Rate Import / Export ===== */
 function downloadRateTemplate(){
  const rows=[
-  ['Item No','Item Name','UOM','Category','Sub Category','Cost'],
-  ['RM001','Rice','KG','Raw Material','Grains','100']
+  ['Item Name','UOM','Category','Cost'],
+  ['Rice','KG','Raw Material','100']
  ];
  download('rate_update_template.csv','text/csv;charset=utf-8','\ufeff'+rows.map(r=>r.map(csvEscape).join(',')).join('\r\n'));
 }
@@ -1465,7 +1501,7 @@ function importRateCSV(){
    const matrix=parseSimpleCSV(reader.result);
    if(matrix.length<2) return alert('CSV has no rate data.');
    const headers=matrix[0].map(x=>String(x).trim().toLowerCase());
-   const required=['item no','item name','uom','category','sub category','cost'];
+   const required=['item name','uom','category','cost'];
    const missing=required.filter(x=>!headers.includes(x));
    if(missing.length) return alert('Missing required columns: '+missing.join(', '));
    const ix=x=>headers.indexOf(x);
@@ -1475,15 +1511,13 @@ function importRateCSV(){
    const updater=loggedEmail||'admin';
    let added=0,errors=[];
    matrix.slice(1).forEach((r,i)=>{
-    const sku=(r[ix('item no')]||'').trim();
     const item=(r[ix('item name')]||'').trim();
-    const unit=(r[ix('uom')]||'').trim();
-    const cat=(r[ix('category')]||'').trim();
-    const subcat=(r[ix('sub category')]||'').trim();
     const rate=Number(String(r[ix('cost')]||'').replace(/,/g,'').trim());
-    if(!sku||!item||!unit||Number.isNaN(rate)||rate<=0){errors.push('Line '+(i+2));return;}
-    // Keep every previous rate; this is a new effective rate.
-    data.rates.push({date:effectiveDate,sku,item,unit,category:cat,subcat,rate,by:updater,timestamp:stamp});
+    const master=masterForItem(item);
+    if(!item||!master||!master.unit||Number.isNaN(rate)||rate<=0){errors.push('Line '+(i+2)+(master?'':' - item not found in Active Item Master'));return;}
+    const sku=master.sku,unit=master.unit,cat=master.category,subcat=master.subcat;
+    // UOM, Category, Sub Category and Item Number always come from Active Item Master.
+    data.rates.push({date:effectiveDate,sku,item:master.item,unit,category:cat,subcat,rate,by:updater,timestamp:stamp});
     added++;
    });
    // One audit entry for the entire bulk upload, regardless of SKU count.
@@ -1508,8 +1542,8 @@ function exportCurrentRates(){
  const rows=Object.values(latest).sort((a,b)=>String(a.sku).localeCompare(String(b.sku)));
  if(!rows.length) return alert('No rates available to export.');
  const lines=[
-  ['Item No','Item Name','UOM','Category','Sub Category','Cost'],
-  ...rows.map(r=>[r.sku,r.item,r.unit,r.category||'',r.subcat||'',r.rate])
+  ['Item Name','UOM','Category','Cost'],
+  ...rows.map(r=>{const m=masterForSku(r.sku)||{};return [m.item||r.item||'',m.unit||'',m.category||'',r.rate]})
  ];
  download('current_rates.csv','text/csv;charset=utf-8','\ufeff'+lines.map(r=>r.map(csvEscape).join(',')).join('\r\n'));
  document.getElementById('rateIOStatus').textContent='Exported '+rows.length+' current rate(s).';
@@ -1518,7 +1552,7 @@ function exportCurrentRates(){
 /* ===== Counted Stock ===== */
 function rateMasterForItem(itemName){ return masterForItem(itemName); }
 function downloadCountedStockTemplate(){
- const rows=[['Item Name','UOM','Category','Counted QTY'],['Rice','KG','Raw Material','0']];
+ const rows=[['Item Name','Counted QTY'],['Rice','0']];
  download('counted_stock_template.csv','text/csv;charset=utf-8','\ufeff'+rows.map(r=>r.map(csvEscape).join(',')).join('\r\n'));
  document.getElementById('countedStockImportStatus').textContent='Template download started: counted_stock_template.csv';
 }
@@ -1531,7 +1565,7 @@ function importCountedStockFile(input){
    const matrix=parseSimpleCSV(String(reader.result||''));
    if(matrix.length<2)throw new Error('CSV has no data.');
    const headers=matrix[0].map(x=>String(x).trim().toLowerCase());
-   const required=['item name','uom','category','counted qty'];
+   const required=['item name','counted qty'];
    const missing=required.filter(x=>!headers.includes(x));
    if(missing.length)throw new Error('Missing required columns: '+missing.join(', '));
    const ix=x=>headers.indexOf(x);
@@ -1540,13 +1574,11 @@ function importCountedStockFile(input){
    let imported=[],errors=[];
    matrix.slice(1).filter(r=>r.some(v=>String(v||'').trim()!=='')).forEach((r,i)=>{
      const itemName=String(r[ix('item name')]||'').trim();
-     const uom=String(r[ix('uom')]||'').trim();
-     const category=String(r[ix('category')]||'').trim();
      const qtyText=String(r[ix('counted qty')]??'').replace(/,/g,'').trim();
      const countedQty=Number(qtyText);
      const master=masterForItem(itemName);
-     if(!itemName||!uom||!category||Number.isNaN(countedQty)||!master){errors.push('Line '+(i+2)+(master?'':' - item not found in Active Item Master'));return;}
-     imported.push({date:closingDate,itemNo:master.sku,itemName:master.item||itemName,uom,category:master.category||'',subCategory:master.subcat||'',countedQty});
+     if(!itemName||Number.isNaN(countedQty)||!master||!master.unit){errors.push('Line '+(i+2)+(master?'':' - item not found in Active Item Master'));return;}
+     imported.push({date:closingDate,itemNo:master.sku,itemName:master.item||itemName,uom:master.unit,category:master.category,subCategory:master.subcat,countedQty});
    });
    data.countedStock=remoteArray(data.countedStock).filter(x=>String(x.date||'')!==closingDate).concat(imported);
    // Bulk Counted Stock import uses ONE document number for the whole closing date.
