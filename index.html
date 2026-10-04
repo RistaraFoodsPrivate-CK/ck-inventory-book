@@ -25,6 +25,8 @@ h1{margin:0 0 5px;font-size:25px}.sub{color:#64748b;margin-bottom:20px}.filters{
 .login{position:fixed;inset:0;background:#eef2f7;display:flex;align-items:center;justify-content:center;z-index:20}.loginbox{width:min(420px,92vw);background:#fff;border-radius:18px;padding:28px;box-shadow:0 15px 45px #0002}.loginbox h2{margin-top:0}.loginbox .field{margin:12px 0}.loginbox input,.loginbox select{height:44px}.error{color:#dc2626;font-size:12px;margin-top:8px}
 @media(max-width:1100px){.kpis{grid-template-columns:repeat(3,1fr)}.grid{grid-template-columns:1fr}}
 @media(max-width:650px){.sidebar{width:72px}.label{display:none}.content{padding:13px}.top{padding:0 12px;min-height:78px}.top-heading h1{font-size:19px}.top-heading .top-sub{font-size:11px}.kpis{grid-template-columns:repeat(2,1fr)}.filters{display:block}.field{margin-bottom:10px}.quick{margin-bottom:10px}.kpi-value{font-size:19px}}
+
+.admin-tools-card{margin-bottom:14px}.admin-tool-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.admin-tool{border:1px solid #dfe6ee;background:#f8fafc;border-radius:12px;padding:14px;text-align:left;cursor:pointer;min-height:82px;transition:.15s}.admin-tool:hover,.admin-tool.active{background:#eef6ff;border-color:#2477e8;box-shadow:0 3px 10px #2477e81a}.admin-tool span{font-size:20px;display:block;margin-bottom:5px}.admin-tool b{display:block;color:#1e293b;font-size:13px}.admin-tool small{display:block;color:#64748b;font-size:11px;margin-top:4px}.admin-tool.log-tool{background:#fffaf0;border-color:#fde3a7}.admin-panel{display:none;margin-top:14px}.admin-panel.open{display:block}.template-box{margin-top:12px;padding:14px;border:1px solid #e4e9f0;background:#f8fafc;border-radius:12px;display:flex;justify-content:space-between;gap:14px;align-items:center}.template-actions{display:flex;gap:10px;align-items:end;flex-wrap:wrap}.small-sub{margin:4px 0 0;font-size:11px}.log-section{margin-top:14px;border:1px solid #e4e9f0;border-radius:12px;padding:12px}.log-heading{font-weight:800;margin-bottom:10px;color:#334155}@media(max-width:900px){.admin-tool-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.template-box{display:block}.template-actions{margin-top:12px}}@media(max-width:550px){.admin-tool-grid{grid-template-columns:1fr}.admin-tool{min-height:72px}.template-actions{display:block}.template-actions .btn,.template-actions .field{margin-bottom:8px}.template-actions .field input{width:100%}}
 </style>
 <style id="counted-stock-io-css">#countedStockIOCard .btn{border:0;border-radius:10px;padding:10px 15px;background:#2478e5;color:#fff;font-weight:600}#countedStockIOCard .btn.secondary{background:#5f6b7a}#countedStockIOCard .muted{color:#65758b}#countedStockIOCard table{border-collapse:collapse}#countedStockIOCard th,#countedStockIOCard td{padding:10px 12px;border-bottom:1px solid #e6ebf1;text-align:left;white-space:nowrap}</style>
 
@@ -303,11 +305,28 @@ body, button, input, select, textarea { font-size: calc(1em - 2px); }
 </section>
 
 <section id="admin" class="page">
+<div class="admin-note">Admin access only. Select an option below to open only the tool you need. Upload templates and management tools are kept separate for a cleaner Admin screen.</div>
 
-<div class="admin-note">Admin access only. Historical rates are retained and the applicable rate is selected according to closing date.</div>
-<div class="card" style="margin-top:14px" id="activeItemMasterCard">
+<div class="admin-tools-card card">
+  <div class="panel-title">Admin Controls</div>
+  <div class="sub">Choose one option. The selected panel opens below.</div>
+  <div class="admin-tool-grid">
+    <button class="admin-tool" onclick="toggleAdminCard('activeItemMasterCard',this)"><span>📋</span><b>Active Item Master</b><small>Download / Upload / Export</small></button>
+    <button class="admin-tool" onclick="toggleAdminCard('weeklyRateCard',this)"><span>💰</span><b>Weekly Rate Update</b><small>Update rate item-wise</small></button>
+    <button class="admin-tool" onclick="toggleAdminCard('rateIOCard',this)"><span>⇅</span><b>Rate Import / Export</b><small>Template / Bulk upload</small></button>
+    <button class="admin-tool" onclick="toggleAdminCard('systemStockCard',this)"><span>📦</span><b>Current System Stock Import</b><small>Download / Upload stock</small></button>
+    <button class="admin-tool" onclick="toggleAdminCard('inventoryClosingDataCard',this)"><span>🗂️</span><b>Inventory Closing Data Management</b><small>Clear closing cycle data</small></button>
+    <button class="admin-tool" onclick="toggleAdminCard('userAccessCard',this)"><span>👥</span><b>Team Access Management</b><small>User module permissions</small></button>
+    <button class="admin-tool" onclick="toggleAdminCard('closingDocumentManagerCard',this)"><span>📄</span><b>Inventory Closing Document Management</b><small>Search / change / delete document</small></button>
+    <button class="admin-tool" onclick="toggleAdminCard('deleteClosingByDateCard',this)"><span>🗑️</span><b>Delete Inventory Closing by Date</b><small>Delete one complete date</small></button>
+    <button class="admin-tool" onclick="toggleAdminCard('closingScheduleCard',this)"><span>📅</span><b>Closing Date Schedule</b><small>Weekly / MTD dates</small></button>
+    <button class="admin-tool log-tool" onclick="toggleAdminCard('adminLogCard',this)"><span>📝</span><b>Admin Log</b><small>Uploaded history / audit / rate history</small></button>
+  </div>
+</div>
+
+<div class="admin-panel card" id="activeItemMasterCard">
 <div class="panel-title">Active Item Master</div>
-<div class="sub">Permanent master for Item No, Item Name, Category and Sub Category. Dashboard, Inventory Closing, Variance Report, Item-wise Report, System Stock and Counted Stock use this master for item classification.</div>
+<div class="sub">Permanent master for Item No, Item Name, Category and Sub Category. Dashboard, Inventory Closing, Variance Report, System Stock and Counted Stock use this master.</div>
 <div class="filters" style="margin-top:12px">
 <div class="field"><label>Item Number / SKU</label><input id="amSku" placeholder="Example: 1637"></div>
 <div class="field"><label>Item Name</label><input id="amItem" placeholder="Example: Eggless sponge cake"></div>
@@ -316,18 +335,17 @@ body, button, input, select, textarea { font-size: calc(1em - 2px); }
 <button class="btn primary" type="button" onclick="saveActiveItem()">Save / Update Item</button>
 <button class="btn light" type="button" onclick="clearActiveItemForm()">Clear</button>
 </div>
-<div class="filters" style="margin-top:10px">
-<button class="btn light" type="button" onclick="downloadActiveItemTemplate()">⬇ Download Active Item Master Template</button>
-<div class="field"><label>CSV File</label><input type="file" id="activeItemCsv" accept=".csv,text/csv"></div>
-<button class="btn primary" type="button" onclick="importActiveItemCSV()">⬆ Import Active Item Master</button>
-<button class="btn light" type="button" onclick="exportActiveItemMaster()">⬇ Export Active Item Master</button>
+<div class="template-box">
+  <div><b>Bulk Upload</b><div class="sub small-sub">First download the template, fill it, then upload CSV.</div></div>
+  <div class="template-actions"><button class="btn light" type="button" onclick="downloadActiveItemTemplate()">⬇ Download Template</button><div class="field"><label>CSV File</label><input type="file" id="activeItemCsv" accept=".csv,text/csv"></div><button class="btn primary" type="button" onclick="importActiveItemCSV()">⬆ Upload Data</button><button class="btn light" type="button" onclick="exportActiveItemMaster()">⬇ Export</button></div>
 </div>
 <div id="activeItemStatus" style="margin-top:10px"></div>
 <div class="tablewrap" style="margin-top:14px"><table class="table" id="activeItemMasterTable"></table></div>
 </div>
 
-<div class="card">
+<div class="admin-panel card" id="weeklyRateCard">
 <div class="panel-title">Weekly Rate Update</div>
+<div class="sub">Update one item rate. Historical rates remain available for the correct closing-date calculation.</div>
 <div class="filters">
 <div class="field"><label>Effective Date</label><input type="date" id="rDate"></div>
 <div class="field"><label>SKU</label><input id="rSku" readonly placeholder="Auto"></div>
@@ -339,98 +357,64 @@ body, button, input, select, textarea { font-size: calc(1em - 2px); }
 </div>
 </div>
 
-<div class="card" style="margin-top:14px" id="rateIOCard">
+<div class="admin-panel card" id="rateIOCard">
 <div class="panel-title">Rate Import / Export</div>
-<div class="sub">Use this format for bulk rate updates. Select the Effective Date before importing. Previous rates remain in history.</div>
-<div class="filters">
-<button class="btn light" type="button" onclick="downloadRateTemplate()">⬇ Download Rate Template</button>
-<div class="field"><label>CSV File</label><input type="file" id="rateCsv" accept=".csv,text/csv"></div>
-<button class="btn primary" type="button" onclick="importRateCSV()">⬆ Import Rates</button>
-<button class="btn light" type="button" onclick="exportCurrentRates()">⬇ Export Current Rates</button>
-</div>
+<div class="sub">For bulk rate updates. Download the template, fill the rate data, then upload. Previous rates remain in history.</div>
+<div class="template-box"><div><b>Bulk Rate Upload</b><div class="sub small-sub">Select the effective date in the file/required format.</div></div><div class="template-actions"><button class="btn light" type="button" onclick="downloadRateTemplate()">⬇ Download Template</button><div class="field"><label>CSV File</label><input type="file" id="rateCsv" accept=".csv,text/csv"></div><button class="btn primary" type="button" onclick="importRateCSV()">⬆ Upload Rates</button><button class="btn light" type="button" onclick="exportCurrentRates()">⬇ Export Current Rates</button></div></div>
 <div id="rateIOStatus" style="margin-top:10px"></div>
 </div>
-<div class="card" style="margin-top:14px">
+
+<div class="admin-panel card" id="systemStockCard">
 <div class="panel-title">Current System Stock Import</div>
-<div class="sub">Admin only. Import your current system stock CSV using the exact columns: item_name, category_name, quantity_available, unit. SKU, Category and Sub Category are taken automatically from the Active Item Master. UOM is retained from the upload.</div>
-<div class="filters">
-<div class="field"><label>Closing Date</label><input type="date" id="systemStockDate"></div>
-<button class="btn light" onclick="downloadSystemStockTemplate()">⬇ Download System Stock Template</button>
-<div class="field"><label>CSV File</label><input type="file" id="systemStockCsv" accept=".csv,text/csv"></div>
-<button class="btn primary" onclick="importSystemStockCSV()">⬆ Import / Update System Stock</button>
-</div>
+<div class="sub">Download the template, fill current system stock, select the closing date, and upload. SKU, Category and Sub Category are matched from Active Item Master.</div>
+<div class="template-box"><div><b>System Stock Upload</b><div class="sub small-sub">Required data: item name, category, quantity available and unit.</div></div><div class="template-actions"><div class="field"><label>Closing Date</label><input type="date" id="systemStockDate"></div><button class="btn light" onclick="downloadSystemStockTemplate()">⬇ Download Template</button><div class="field"><label>CSV File</label><input type="file" id="systemStockCsv" accept=".csv,text/csv"></div><button class="btn primary" onclick="importSystemStockCSV()">⬆ Upload Stock</button></div></div>
 <div id="systemStockStatus" style="margin-top:10px"></div>
 <div class="tablewrap" style="margin-top:14px"><table class="table" id="systemStockTable"></table></div>
 </div>
 
-<div class="card" style="margin-top:14px;border-left:4px solid #ef4444">
+<div class="admin-panel card" id="inventoryClosingDataCard">
 <div class="panel-title">Inventory Closing Data Management</div>
-<div class="sub">Clear Inventory Closing entries and imported Counted Stock when starting a fresh physical-count cycle. System Stock, Rates, Active Item Master, Users and Closing Schedule are not deleted.</div>
-<div style="margin-top:12px">
-<button class="btn danger" type="button" onclick="clearInventoryClosingData()">🗑 Clear All Inventory Closing + Counted Stock</button>
-</div>
+<div class="sub">Use this only when starting a fresh physical-count cycle. It clears Inventory Closing entries and imported Counted Stock. System Stock, Rates, Active Item Master, Users and Closing Schedule stay safe.</div>
+<div style="margin-top:12px"><button class="btn danger" type="button" onclick="clearInventoryClosingData()">🗑 Clear All Inventory Closing + Counted Stock</button></div>
 </div>
 
-<div class="card" style="margin-top:14px" id="userAccessCard">
+<div class="admin-panel card" id="userAccessCard">
   <div class="panel-title">Team Access Management</div>
   <div class="sub">Create email-wise access before giving the team member login access. Admin always has full access.</div>
-  <div class="filters">
-    <div class="field"><label>Team Member Email</label><input id="accessEmail" type="email" placeholder="name@company.com"></div>
-    <div class="field"><label>Temporary Password</label><input id="accessPassword" type="text" placeholder="Set password"></div>
-  </div>
+  <div class="filters"><div class="field"><label>Team Member Email</label><input id="accessEmail" type="email" placeholder="name@company.com"></div><div class="field"><label>Temporary Password</label><input id="accessPassword" type="text" placeholder="Set password"></div></div>
   <div style="margin-top:12px;font-weight:800;color:#334155">Select modules this email can access</div>
-  <div class="access-grid">
-    <label class="access-item"><input type="checkbox" id="permDashboard" checked> Dashboard</label>
-    <label class="access-item"><input type="checkbox" id="permClosing"> Inventory Closing</label>
-    <label class="access-item"><input type="checkbox" id="permEditClosing"> Edit Inventory Closing Qty</label>
-    <label class="access-item"><input type="checkbox" id="permVariance" checked> Variance Report</label>
-    <label class="access-item"><input type="checkbox" id="permItems"> Item-wise Report</label>
-    <label class="access-item"><input type="checkbox" id="permExcel"> Export Excel</label>
-    <label class="access-item"><input type="checkbox" id="permPDF"> Export PDF</label>
-  </div>
-  <div style="margin-top:12px">
-    <button class="btn primary" type="button" onclick="saveTeamAccess()">Save / Update Access</button>
-    <button class="btn light" type="button" onclick="clearAccessForm()">Clear</button>
-  </div>
-  <div id="accessStatus" style="margin-top:10px"></div>
-  <div class="tablewrap" style="margin-top:14px">
-    <table class="table user-access-table" id="userAccessTable"></table>
-  </div>
+  <div class="access-grid"><label class="access-item"><input type="checkbox" id="permDashboard" checked> Dashboard</label><label class="access-item"><input type="checkbox" id="permClosing"> Inventory Closing</label><label class="access-item"><input type="checkbox" id="permEditClosing"> Edit Inventory Closing Qty</label><label class="access-item"><input type="checkbox" id="permVariance" checked> Variance Report</label><label class="access-item"><input type="checkbox" id="permItems"> Item-wise Report</label><label class="access-item"><input type="checkbox" id="permExcel"> Export Excel</label><label class="access-item"><input type="checkbox" id="permPDF"> Export PDF</label></div>
+  <div style="margin-top:12px"><button class="btn primary" type="button" onclick="saveTeamAccess()">Save / Update Access</button><button class="btn light" type="button" onclick="clearAccessForm()">Clear</button></div>
+  <div id="accessStatus" style="margin-top:10px"></div><div class="tablewrap" style="margin-top:14px"><table class="table user-access-table" id="userAccessTable"></table></div>
 </div>
 
-<div class="card" style="margin-top:14px" id="closingDocumentManagerCard">
+<div class="admin-panel card" id="closingDocumentManagerCard">
   <div class="panel-title">Inventory Closing Document Management</div>
-  <div class="sub">Every closing entry gets a unique document number. If a closing was posted to the wrong date, search the document number here to change the date or delete the document.</div>
-  <div class="filters" style="margin-top:12px">
-    <div class="field"><label>Unique Document No.</label><input id="adminDocSearch" placeholder="Example: CKC-20260915-001"></div>
-    <button class="btn primary" type="button" onclick="searchClosingDocument()">Search Document</button>
-  </div>
+  <div class="sub">Search a unique closing document number to change its date or delete that individual document.</div>
+  <div class="filters" style="margin-top:12px"><div class="field"><label>Unique Document No.</label><input id="adminDocSearch" placeholder="Example: CKC-20260915-001"></div><button class="btn primary" type="button" onclick="searchClosingDocument()">Search Document</button></div>
   <div id="adminDocResult" style="margin-top:12px"></div>
 </div>
-<div class="card" style="margin-top:14px" id="closingDateDeleteCard">
+
+<div class="admin-panel card" id="deleteClosingByDateCard">
   <div class="panel-title">Delete Inventory Closing by Date</div>
-  <div class="sub">Admin only. Select a closing date to remove all Inventory Closing entries posted on that exact date, whether they were entered manually or uploaded. Rates, System Stock, Active Item Master and Closing Schedule will not be deleted.</div>
-  <div class="filters" style="margin-top:12px;align-items:end">
-    <div class="field"><label>Closing Date to Delete</label><input type="date" id="adminDeleteClosingDate" onchange="previewClosingDateDelete()"></div>
-    <div class="field"><label>Entries Found</label><input id="adminDeleteClosingCount" value="0" readonly></div>
-    <button class="btn light" type="button" onclick="previewClosingDateDelete()">Check Date</button>
-    <button class="btn danger" type="button" onclick="deleteClosingDateData()">Delete All Entries for This Date</button>
-  </div>
-  <div id="adminDeleteClosingResult" style="margin-top:12px"></div>
+  <div class="sub">Delete all Inventory Closing and Counted Stock records for one selected date. This does not delete Rates, Active Item Master, Team Users or Closing Date Schedule.</div>
+  <div class="filters"><div class="field"><label>Select Closing Date</label><input type="date" id="deleteClosingDate"></div><button class="btn danger" type="button" onclick="deleteInventoryClosingByDate()">🗑 Delete This Date</button></div>
+  <div id="deleteClosingDateStatus" style="margin-top:10px"></div>
 </div>
-<div class="card" style="margin-top:14px" id="closingScheduleCard">
+
+<div class="admin-panel card" id="closingScheduleCard">
   <div class="panel-title">Closing Date Schedule</div>
-  <div class="sub">Set the planned weekly / MTD closing dates and optional closing times. The latest 4 configured dates will automatically appear on the Dashboard.</div>
-  <div class="filters">
-    <div class="field"><label>Closing Date</label><input type="date" id="scheduleDate"></div>
-    <div class="field"><label>Closing Time</label><input type="time" id="scheduleTime"></div>
-    <div class="field"><label>Type</label><select id="scheduleType"><option>Weekly</option><option>MTD</option></select></div>
-    <button class="btn primary" type="button" onclick="addClosingSchedule()">Add Closing Date</button>
-  </div>
+  <div class="sub">Set planned weekly / MTD closing dates and optional times. The latest configured dates appear on the Dashboard.</div>
+  <div class="filters"><div class="field"><label>Closing Date</label><input type="date" id="scheduleDate"></div><div class="field"><label>Closing Time</label><input type="time" id="scheduleTime"></div><div class="field"><label>Type</label><select id="scheduleType"><option>Weekly</option><option>MTD</option></select></div><button class="btn primary" type="button" onclick="addClosingSchedule()">Add Closing Date</button></div>
   <div class="tablewrap" style="margin-top:14px"><table class="table" id="closingScheduleTable"></table></div>
 </div>
-<div class="card" style="margin-top:14px"><div class="panel-title">Rate History</div><div class="sub">Shows only when the rate master was updated. Individual SKU rate details are not displayed here.</div><div class="tablewrap"><table class="table" id="rateTable"></table></div></div>
-<div class="card" style="margin-top:14px"><div class="panel-title">Audit Log</div><div class="tablewrap"><table class="table" id="auditTable"></table></div></div>
+
+<div class="admin-panel card" id="adminLogCard">
+  <div class="panel-title">Admin Log</div>
+  <div class="sub">Separate history area for uploads, updates, deletes and rate-update history. Open this only when you need to check what Admin changed.</div>
+  <div class="log-section"><div class="log-heading">Uploaded / Admin Activity History</div><div class="tablewrap"><table class="table" id="auditTable"></table></div></div>
+  <div class="log-section"><div class="log-heading">Rate Update History</div><div class="tablewrap"><table class="table" id="rateTable"></table></div></div>
+</div>
 </section>
 
 </div>
@@ -809,18 +793,19 @@ function updateRateItemFromSelection(){
  }
 }
 
-function stockForDate(sku,date,itemName){
- const d=String(date||'').trim();
- const key=String(sku||'').trim().toLowerCase();
- const itemKey=String(itemName||'').trim().toLowerCase();
+function normalizeKey(v){
+ return String(v??'').trim().toLowerCase().replace(/\s+/g,' ');
+}
+function stockForDate(sku,date,item){
+ const d=normalizeKey(date);
  if(!d)return null;
- const list=remoteArray(data.systemStock);
- // Primary match: same closing date + normalized SKU.
- let hit=list.find(x=>String(x.date||'').trim()===d && String(x.sku||'').trim().toLowerCase()===key);
- // Fallback: same closing date + normalized item name. This protects against
- // harmless SKU formatting differences between the Active Item Master and upload.
- if(!hit && itemKey) hit=list.find(x=>String(x.date||'').trim()===d && String(x.item_name||x.item||'').trim().toLowerCase()===itemKey);
- return hit||null;
+ const stocks=remoteArray(data.systemStock);
+ const bySku=stocks.find(x=>normalizeKey(x.date)===d && normalizeKey(x.sku)===normalizeKey(sku));
+ if(bySku)return bySku;
+ if(item){
+  return stocks.find(x=>normalizeKey(x.date)===d && normalizeKey(x.item_name||x.item||'')===normalizeKey(item))||null;
+ }
+ return null;
 }
 function countedForDate(sku,date){
  const d=String(date||'').trim();
@@ -877,22 +862,46 @@ function refreshSubCategoryFilter(){
  if(list.includes(current))el.value=current;
 }
 function effectiveSystemQtyForClosing(x){
- const snap=stockForDate(x?.sku,x?.date,x?.item);
+ const snap=stockForDate(x.sku,x.date,x.item);
  if(snap && snap.quantity_available!==undefined && snap.quantity_available!=='') return Number(snap.quantity_available);
- return Number(x?.system||0);
+ return Number(x.system||0);
 }
 function rows(){
  return (Array.isArray(data.closings)?data.closings:[]).map(x=>{
   const master=masterForSku(x.sku)||{};
   const rate=Number.isFinite(Number(x.rate))&&Number(x.rate)>0?Number(x.rate):applicableRate(x.sku,x.date,0);
-  // Counted QTY is the actual physical quantity counted. Older imported records
-  // stored it in importedVariance; normalize that into Physical Qty.
   const system=effectiveSystemQtyForClosing(x);
   const physical=Number.isFinite(Number(x.importedVariance))?Number(x.importedVariance):Number(x.physical||0);
   const v=physical-system;
   return {...x,system,physical,item:master.item||x.item||'',uom:master.unit||x.uom||'',cat:master.category||x.cat||'',subcat:master.subcat||x.subcat||x.subCategory||'',rate,qty:v,varQty:v,value:v*rate,type:v<0?'SHORT':v>0?'EXCESS':'MATCHED'};
  });
 }
+
+function toggleAdminCard(id,btn){
+ if(role!=='Admin')return alert('Admin only');
+ document.querySelectorAll('.admin-panel').forEach(p=>p.classList.remove('open'));
+ document.querySelectorAll('.admin-tool').forEach(b=>b.classList.remove('active'));
+ const el=document.getElementById(id); if(!el)return;
+ el.classList.add('open'); if(btn)btn.classList.add('active');
+ setTimeout(()=>el.scrollIntoView({behavior:'smooth',block:'start'}),30);
+}
+function deleteInventoryClosingByDate(){
+ if(role!=='Admin')return alert('Admin only');
+ const date=String(document.getElementById('deleteClosingDate')?.value||'').trim();
+ const status=document.getElementById('deleteClosingDateStatus');
+ if(!date)return alert('Select the closing date first.');
+ const closingCount=(data.closings||[]).filter(x=>String(x.date||'')===date).length;
+ const countedCount=(data.countedStock||[]).filter(x=>String(x.date||'')===date).length;
+ if(!closingCount&&!countedCount){if(status)status.innerHTML='<span class="muted">No Inventory Closing or Counted Stock data found for '+esc(date)+'.</span>';return;}
+ if(!confirm('Delete ALL Inventory Closing and Counted Stock data for '+date+'? This cannot be undone.'))return;
+ if(!adminPasswordCheck('delete all closing data for '+date))return;
+ data.closings=(data.closings||[]).filter(x=>String(x.date||'')!==date);
+ data.countedStock=(data.countedStock||[]).filter(x=>String(x.date||'')!==date);
+ data.audit=remoteArray(data.audit); data.audit.push({time:new Date().toLocaleString('en-IN'),by:loggedEmail||'admin',action:'Inventory Closing Deleted by Date',sku:date,old:'Closing '+closingCount+', Counted '+countedCount,new:'Deleted'});
+ save();renderAll();
+ if(status)status.innerHTML='<span class="success">Deleted '+closingCount+' closing record(s) and '+countedCount+' counted-stock record(s) for '+esc(date)+'.</span>';
+}
+
 function renderAll(){
  if(normalizeLegacyCountedClosingRecords()) save();
  ensureClosingDocumentNumbers();
@@ -1042,7 +1051,7 @@ function editClosingQty(date,sku){
  const idx=data.closings.findIndex(x=>String(x.date||'')===String(date||'')&&String(x.sku||'').toLowerCase()===String(sku||'').toLowerCase());
  if(idx<0)return alert('Closing record not found.');
  const rec=data.closings[idx];
- const currentSystem=effectiveSystemQtyForClosing(rec), currentPhysical=Number.isFinite(Number(rec.importedVariance))?Number(rec.importedVariance):Number(rec.physical||0);
+ const currentSystem=Number(rec.system||0), currentPhysical=Number.isFinite(Number(rec.importedVariance))?Number(rec.importedVariance):Number(rec.physical||0);
  const systemText=prompt('Enter System Qty:',String(currentSystem));
  if(systemText===null)return;
  const physicalText=prompt('Enter Physical Qty:',String(currentPhysical));
@@ -1212,48 +1221,6 @@ function renderRates(){
 }
 
 function renderAudit(){document.getElementById('auditTable').innerHTML='<tr><th>Date/Time</th><th>Updated By</th><th>Action</th></tr>'+data.audit.slice().reverse().map(x=>`<tr><td>${x.time||'-'}</td><td>${x.by||'-'}</td><td>${x.action||'-'}</td></tr>`).join('')}
-function previewClosingDateDelete(){
- if(role!=='Admin')return alert('Admin only');
- const date=String(document.getElementById('adminDeleteClosingDate')?.value||'').trim();
- const countEl=document.getElementById('adminDeleteClosingCount');
- const result=document.getElementById('adminDeleteClosingResult');
- if(!date){
-   if(countEl)countEl.value='0';
-   if(result)result.innerHTML='';
-   return;
- }
- const matches=(Array.isArray(data.closings)?data.closings:[]).filter(x=>String(x.date||'')===date);
- if(countEl)countEl.value=String(matches.length);
- if(result){
-   if(matches.length){
-     const docs=matches.map(x=>esc(x.docNo||'-')).join(', ');
-     result.innerHTML='<span class="danger">'+matches.length+' closing entr'+(matches.length===1?'y':'ies')+' found for '+esc(date)+'. Documents: '+docs+'</span>';
-   }else{
-     result.innerHTML='<span class="muted">No Inventory Closing entries found for '+esc(date)+'.</span>';
-   }
- }
-}
-async function deleteClosingDateData(){
- if(role!=='Admin')return alert('Admin only');
- const date=String(document.getElementById('adminDeleteClosingDate')?.value||'').trim();
- if(!date)return alert('Select the closing date to delete.');
- const matches=(Array.isArray(data.closings)?data.closings:[]).filter(x=>String(x.date||'')===date);
- const count=matches.length;
- if(!count)return alert('No Inventory Closing entries found for '+date+'.');
- const docs=matches.map(x=>x.docNo||x.item||x.sku).slice(0,8).join(', ')+(count>8?' ...':'');
- if(!confirm('Delete ALL '+count+' Inventory Closing entr'+(count===1?'y':'ies')+' for '+date+'?\n\nDocuments: '+docs+'\n\nThis will permanently remove those closing entries from Firebase.'))return;
- if(!(await adminPasswordCheck('delete all Inventory Closing entries for '+date)))return;
- data.closings=(Array.isArray(data.closings)?data.closings:[]).filter(x=>String(x.date||'')!==date);
- data.audit=remoteArray(data.audit);
- data.audit.push({time:new Date().toLocaleString(),by:loggedEmail||'admin',action:'Inventory Closing Date Data Deleted',sku:date,old:count,new:'0'});
- await saveRemote();
- localStorage.setItem(KEY,JSON.stringify(data));
- renderAll();
- const countEl=document.getElementById('adminDeleteClosingCount'); if(countEl)countEl.value='0';
- const result=document.getElementById('adminDeleteClosingResult'); if(result)result.innerHTML='<span class="success">Deleted '+count+' Inventory Closing entr'+(count===1?'y':'ies')+' for '+esc(date)+'.</span>';
- alert('Deleted '+count+' Inventory Closing entr'+(count===1?'y':'ies')+' for '+date+'.');
-}
-
 function searchClosingDocument(){
  if(role!=='Admin')return alert('Admin only');
  const q=String(document.getElementById('adminDocSearch')?.value||'').trim().toLowerCase();
@@ -1313,7 +1280,7 @@ function addClosing(){
  const itemInput=document.getElementById('cItem');
  const itemRec=masterForSku(sku);
  const closingDate=document.getElementById('cDate')?.value||'';
- const stock=stockForDate(sku,closingDate,itemRec?.item||itemInput?.value||'');
+ const stock=stockForDate(sku,closingDate);
  const counted=countedForDate(sku,closingDate);
  const systemEl=document.getElementById('cSystem');
  const systemValue=systemEl?.value!==''?Number(systemEl.value):(stock?Number(stock.quantity_available):NaN);
@@ -1363,12 +1330,14 @@ function importSystemStockCSV(){
     if(!item||!category||!unit||Number.isNaN(qty)||!master){errors.push('Line '+line+(master?'':' - item not found in Active Item Master'));return;}
     const sku=master.sku,subCategory=master.subcat||'';
     data.systemStock.push({date:closingDate,sku,item_name:item,category_name:master.category||category,sub_category_name:subCategory,quantity_available:qty,unit});
-    // Synchronize any existing Inventory Closing record for the same date/SKU.
-    // This fixes the case where Counted Stock was imported before System Stock.
-    data.closings=remoteArray(data.closings);
-    data.closings.filter(c=>String(c.date||'')===closingDate && String(c.sku||'').toLowerCase()===String(sku||'').toLowerCase())
-      .forEach(c=>{c.system=qty;c.uom=c.uom||unit;});
     added++;
+   });
+   // Refresh existing Inventory Closing records for this date from the newly uploaded System Stock.
+   data.closings=remoteArray(data.closings);
+   data.closings.forEach(c=>{
+    if(normalizeKey(c.date)!==normalizeKey(closingDate))return;
+    const snap=stockForDate(c.sku,c.date,c.item);
+    if(snap){ c.system=Number(snap.quantity_available); c.uom=c.uom||snap.unit||''; }
    });
    data.audit.push({time:new Date().toLocaleString(),by:loggedEmail||'admin',action:'System Stock Snapshot Import'});
    save();renderAll();document.getElementById('systemStockCsv').value='';
@@ -1530,7 +1499,7 @@ function importCountedStockFile(input){
    // Manual one-by-one entries continue to receive their own unique document number.
    const bulkDocNo=nextClosingDocumentNumber(closingDate);
    imported.forEach(c=>{
-     const stock=stockForDate(c.itemNo,closingDate,c.itemName);
+     const stock=stockForDate(c.itemNo,closingDate);
      const systemQty=stock?Number(stock.quantity_available):0;
      const rate=applicableRate(c.itemNo,closingDate,0);
      const idx=data.closings.findIndex(x=>x.date===closingDate && String(x.sku||'').toLowerCase()===c.itemNo.toLowerCase());
@@ -1568,7 +1537,7 @@ function updateAutoClosingRate(){
  el.value=rate||'';
  const counted=countedForDate(sku,date);
  if(counted && document.getElementById('cPhysical') && document.getElementById('cPhysical').value==='') document.getElementById('cPhysical').value=counted.countedQty;
- const stock=stockForDate(sku,date,document.getElementById('cItem')?.value||'');
+ const stock=stockForDate(sku,date);
  if(stock && document.getElementById('cSystem')) document.getElementById('cSystem').value=Number(stock.quantity_available);
 }
 
